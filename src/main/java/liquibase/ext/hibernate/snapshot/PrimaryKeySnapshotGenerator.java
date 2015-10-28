@@ -1,22 +1,18 @@
 package liquibase.ext.hibernate.snapshot;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import liquibase.exception.DatabaseException;
 import liquibase.snapshot.DatabaseSnapshot;
 import liquibase.snapshot.InvalidExampleException;
-import liquibase.statement.DatabaseFunction;
 import liquibase.structure.DatabaseObject;
 import liquibase.structure.core.Column;
 import liquibase.structure.core.Index;
 import liquibase.structure.core.PrimaryKey;
 import liquibase.structure.core.Table;
 
-import org.hibernate.dialect.PostgreSQL81Dialect;
-import org.hibernate.id.IdentityGenerator;
-import org.hibernate.mapping.SimpleValue;
 import org.hibernate.sql.Alias;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public class PrimaryKeySnapshotGenerator extends HibernateSnapshotGenerator {
 
@@ -26,6 +22,8 @@ public class PrimaryKeySnapshotGenerator extends HibernateSnapshotGenerator {
     // This is the same Alias as in org.hibernate.mapping.PersistentClass.PK_ALIAS
     private static final Alias PK_ALIAS_15 = new Alias(15, PK);
     private static final Alias NEW_PK_ALIAS = new Alias(PKNAMELENGTH, PK);
+    private HashSet<String> primaryKeyNames = new HashSet<String>() ;
+    private int pkCounter = 1 ;
 
     public PrimaryKeySnapshotGenerator() {
         super(PrimaryKey.class, new Class[]{Table.class});
@@ -70,6 +68,11 @@ public class PrimaryKeySnapshotGenerator extends HibernateSnapshotGenerator {
                         LOG.warning("Changing hibernate primary key name to " + hbnPrimaryKeyName);
                     }
                 }
+                if (primaryKeyNames.contains(hbnPrimaryKeyName)) {
+                	hbnPrimaryKeyName = hbnPrimaryKeyName + pkCounter++ ;
+                }
+                
+                primaryKeyNames.add(hbnPrimaryKeyName) ;
                 pk.setName(hbnPrimaryKeyName);
                 pk.setTable(table);
                 for (Object hibernateColumn : hibernatePrimaryKey.getColumns()) {
@@ -88,5 +91,4 @@ public class PrimaryKeySnapshotGenerator extends HibernateSnapshotGenerator {
             }
         }
     }
-
 }
